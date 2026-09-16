@@ -53,7 +53,8 @@
         { "@type": "City", "name": "St. Charles, MO" }, { "@type": "City", "name": "St. Peters, MO" }, { "@type": "City", "name": "Chesterfield, MO" },
         { "@type": "City", "name": "Fenton, MO" }, { "@type": "City", "name": "Troy, MO" }, { "@type": "City", "name": "Cuba, MO" }, { "@type": "City", "name": "Potosi, MO" }
       ],
-      "sameAs": ["{{facebook}}"],
+      "sameAs": ["{{facebook}}", "{{googleMapsUrl}}"],
+      "hasMap": "{{googleMapsUrl}}",
       "hasOfferCatalog": {
         "@type": "OfferCatalog", "name": "Services",
         "itemListElement": [
@@ -64,6 +65,7 @@
       }
     },
     { "@type": "WebSite", "@id": "{{url}}/#website", "url": "{{url}}/", "name": "{{name}}", "publisher": { "@id": "{{url}}/#business" } }
+    {{{breadcrumbSchema}}}
     {{{schemaExtra}}}
   ]
 }

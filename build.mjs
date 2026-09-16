@@ -54,6 +54,11 @@ for (const file of pages) {
   page.ogImage = site.url + (page.ogImage || "/img/og-image.jpg");
   page.robots = page.noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large";
   page.bodyClass = page.bodyClass || "";
+  page.breadcrumbSchema = page.crumb && page.path !== "/"
+    ? `,{ "@type": "BreadcrumbList", "itemListElement": [` +
+      `{ "@type": "ListItem", "position": 1, "name": "Home", "item": "${site.url}/" },` +
+      `{ "@type": "ListItem", "position": 2, "name": ${JSON.stringify(page.crumb)}, "item": "${site.url}${page.path}" }] }`
+    : "";
   const data = { ...site, ...page, site, page, year: new Date().getFullYear() };
   // nav aria-current markers
   data.cur = Object.fromEntries((site.navItems || []).map((n) => [n.key, page.nav === n.key ? ' aria-current="page"' : ""]));
