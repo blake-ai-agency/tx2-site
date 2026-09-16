@@ -102,11 +102,78 @@
       email: function (v) { return v.trim() === "" || /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/.test(v.trim()) ? "" : "That email doesn't look right."; },
       service: function (v) { return v ? "" : "Pick a service."; },
       city: function (v) { return v.trim().length >= 2 && v.trim().length <= 80 ? "" : "Which town is the job in?"; },
-      message: function (v) { return v.trim().length <= 2000 ? "" : "Please keep it under 2,000 characters."; }
+      message: function (v) { return v.trim().length <= 2000 ? "" : "Please keep it under 2,000 characters."; },
+      photos: function () {
+        if (photosRequired() && photos.length < PHOTO_MIN) return "Please add at least " + PHOTO_MIN + " photos so we can quote your junk removal (" + photos.length + " of " + PHOTO_MIN + " added).";
+        if (photos.length > PHOTO_MAX) return "Max " + PHOTO_MAX + " photos.";
+        return "";
+      }
     };
+
+    /* ---- Photos: required (min 3) for junk removal, optional otherwise ---- */
+    var PHOTO_MIN = 3, PHOTO_MAX = 8, PHOTO_EDGE = 1600, PHOTO_MAX_RAW = 25 * 1024 * 1024;
+    var photos = []; // [{ blob, name, url }]
+    var photoField = form.querySelector("[data-photos]");
+    var photoInput = document.getElementById("f-photos");
+    var photoGrid = form.querySelector("[data-photo-grid]");
+    var photoLabel = form.querySelector("[data-photos-label]");
+    var serviceSel = document.getElementById("f-service");
+    var uploadZone = form.querySelector("[data-upload-zone]");
+    var photosRequired = function () { return serviceSel && serviceSel.value === "junk"; };
+    var syncPhotoLabel = function () {
+      if (!photoLabel) return;
+      var req = photosRequired();
+      photoField.classList.toggle("is-required", req);
+      photoLabel.innerHTML = req
+        ? '<span class="req" aria-hidden="true">*</span> <span class="upload__count">' + photos.length + " of " + PHOTO_MIN + " required</span> — we quote junk removal from photos"
+        : "(optional — but they get you a faster quote)";
+      if (photoInput) photoInput.setAttribute("aria-required", String(req));
+      if (!req && photoField.classList.contains("is-error")) validateField(photoInput);
+    };
+    var renderThumbs = function () {
+      photoGrid.textContent = "";
+      photos.forEach(function (p, i) {
+        var d = document.createElement("div"); d.className = "thumb" + (p.busy ? " thumb--busy" : "");
+        var im = document.createElement("img"); im.alt = "Photo " + (i + 1); im.src = p.url; d.appendChild(im);
+        var rm = document.createElement("button"); rm.type = "button"; rm.className = "thumb__rm"; rm.setAttribute("aria-label", "Remove photo " + (i + 1)); rm.textContent = "×";
+        rm.addEventListener("click", function () { URL.revokeObjectURL(p.url); photos.splice(i, 1); renderThumbs(); syncPhotoLabel(); if (photoField.classList.contains("is-error")) validateField(photoInput); });
+        d.appendChild(rm); photoGrid.appendChild(d);
+      });
+      syncPhotoLabel();
+    };
+    // Shrink on-device: long edge 1600px, JPEG q0.82. Falls back to the original if the browser can't decode it (e.g. HEIC in Chrome).
+    var shrink = function (file) {
+      if (!("createImageBitmap" in window) || !document.createElement("canvas").getContext) return Promise.resolve(file);
+      return createImageBitmap(file, { imageOrientation: "from-image" }).then(function (bmp) {
+        var scale = Math.min(1, PHOTO_EDGE / Math.max(bmp.width, bmp.height));
+        var c = document.createElement("canvas"); c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+        c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); bmp.close && bmp.close();
+        return new Promise(function (res) { c.toBlob(function (b) { res(b || file); }, "image/jpeg", 0.82); });
+      }).catch(function () { return file; });
+    };
+    var addFiles = function (list) {
+      var files = Array.prototype.slice.call(list || []).filter(function (f) { return /^image\//.test(f.type) || /\.(heic|heif|jpe?g|png|webp)$/i.test(f.name); });
+      var room = PHOTO_MAX - photos.length;
+      if (files.length > room) { files = files.slice(0, room); }
+      files.forEach(function (f) {
+        if (f.size > PHOTO_MAX_RAW) return;
+        var entry = { blob: f, name: f.name || "photo.jpg", url: URL.createObjectURL(f), busy: true };
+        photos.push(entry); renderThumbs();
+        shrink(f).then(function (b) { entry.blob = b; entry.name = (f.name || "photo").replace(/\.[^.]+$/, "") + ".jpg"; entry.busy = false; renderThumbs(); if (photoField.classList.contains("is-error")) validateField(photoInput); });
+      });
+      photoInput.value = "";
+    };
+    if (photoInput) {
+      photoInput.addEventListener("change", function () { addFiles(photoInput.files); });
+      ["dragenter", "dragover"].forEach(function (ev) { uploadZone.addEventListener(ev, function (e) { e.preventDefault(); uploadZone.classList.add("is-drag"); }); });
+      ["dragleave", "drop"].forEach(function (ev) { uploadZone.addEventListener(ev, function (e) { e.preventDefault(); uploadZone.classList.remove("is-drag"); }); });
+      uploadZone.addEventListener("drop", function (e) { if (e.dataTransfer) addFiles(e.dataTransfer.files); });
+      if (serviceSel) serviceSel.addEventListener("change", syncPhotoLabel);
+      syncPhotoLabel();
+    }
     var validateField = function (input) {
       var rule = rules[input.name]; if (!rule) return true;
-      var msg = rule(input.value);
+      var msg = rule(input.name === "photos" ? null : input.value);
       var field = input.closest(".field");
       var err = field && field.querySelector(".field__error");
       if (field) field.classList.toggle("is-error", !!msg);
@@ -127,12 +194,20 @@
       if (!ok) { var firstErr = form.querySelector(".field.is-error input, .field.is-error select, .field.is-error textarea"); if (firstErr) firstErr.focus(); return; }
       submitBtn.setAttribute("aria-busy", "true");
       var label = submitBtn.textContent; submitBtn.textContent = "Sending…";
-      var fd = new FormData(form);
+      if (photos.some(function (p) { return p.busy; })) { showStatus("error", "Still preparing your photos — give it a second and hit send again."); submitBtn.removeAttribute("aria-busy"); submitBtn.textContent = label; return; }
+      var fd = new FormData();
+      Array.prototype.forEach.call(form.elements, function (el) {
+        if (!el.name || el.type === "file" || el.disabled) return;
+        if ((el.type === "checkbox" || el.type === "radio") && !el.checked) return;
+        fd.append(el.name, el.value);
+      });
+      photos.forEach(function (p, i) { fd.append("photos", p.blob, "photo-" + (i + 1) + ".jpg"); });
       fetch(form.action, { method: "POST", body: fd, headers: { "Accept": "application/json" } })
         .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
         .then(function (res) {
           if (res.ok && res.body && res.body.ok) {
             form.reset();
+            photos.forEach(function (p) { URL.revokeObjectURL(p.url); }); photos = []; renderThumbs();
             if (started) started.value = String(Date.now());
             showStatus("success", "Got it — we'll call or text you shortly to confirm details. Need it faster? Call (636) 584-9662.");
             if (window.turnstile) { try { window.turnstile.reset(); } catch (_) {} }
@@ -154,6 +229,6 @@
 (function () {
   var sel = document.getElementById("f-service"); if (!sel) return;
   var q = new URLSearchParams(location.search).get("service");
-  if (q && sel.querySelector('option[value="' + q.replace(/[^a-z]/g, "") + '"]')) sel.value = q.replace(/[^a-z]/g, "");
+  if (q && sel.querySelector('option[value="' + q.replace(/[^a-z]/g, "") + '"]')) { sel.value = q.replace(/[^a-z]/g, ""); sel.dispatchEvent(new Event("change")); }
   if (new URLSearchParams(location.search).get("error")) { var s = document.querySelector("#contact-form .form__status"); if (s) { s.dataset.state = "error"; s.textContent = "Something went wrong sending that. Please call or text (636) 584-9662."; } }
 })();

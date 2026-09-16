@@ -82,6 +82,19 @@
           <p class="field__error" id="e-message"></p>
           <p class="field__hint">Heavy stuff (shingles, concrete, dirt)? Mention it and we'll price the weight right.</p>
         </div>
+        <div class="field field--photos" data-photos>
+          <label for="f-photos">Photos of the job <span class="muted" data-photos-label>(optional — but they get you a faster quote)</span></label>
+          <div class="upload" data-upload-zone>
+            <input id="f-photos" name="photos" type="file" accept="image/*" multiple class="upload__input" aria-describedby="photos-hint">
+            <div class="upload__body">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              <p><b>Tap to take or add photos</b><span>JPG, PNG or HEIC · up to 8 photos</span></p>
+            </div>
+          </div>
+          <div class="upload__grid" data-photo-grid></div>
+          <p class="field__error" id="e-photos"></p>
+          <p class="field__hint" id="photos-hint" data-photos-hint>A wide shot of the pile plus a couple of close-ups is perfect. Photos are shrunk before sending, so don't worry about size.</p>
+        </div>
         <div class="hp" aria-hidden="true">
           <label for="f-website">Website</label>
           <input id="f-website" name="website" type="text" tabindex="-1" autocomplete="off">
