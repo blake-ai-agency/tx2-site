@@ -55,6 +55,17 @@ Everything else (service area lists, "5 days + 1 ton included", 14-yard specs) c
 
 Until these are set, the form returns a friendly "call us" message instead of failing silently.
 
+### Google reviews (home + about page strip)
+
+| Variable | Where to get it |
+|---|---|
+| `GOOGLE_PLACES_API_KEY` | console.cloud.google.com → create a project → **APIs & Services → Library → "Places API (New)" → Enable** → **Credentials → Create credentials → API key**. Then edit the key: *API restrictions → Restrict key → Places API (New)* only. Billing must be enabled on the project (Google's free monthly credit covers this many times over — the site calls Google about 4× a day). |
+| `GOOGLE_PLACE_ID` *(optional)* | Skip it — the endpoint finds TX2's Place ID from the address on first run and remembers it. |
+| `REVIEWS_MIN_RATING` *(optional)* | Hide reviews below this many stars. Default `4`. |
+| `REVIEWS_TTL` *(optional)* | Seconds between refreshes from Google. Default `21600` (6 h). |
+
+`/api/reviews` returns rating, review count and the latest reviews (Google's API exposes the 5 most relevant per place), cached at Cloudflare's edge. New reviews appear on the site automatically at the next refresh. Without the key, the strip shows the built-in Katherine P. review and the buttons still link to Google.
+
 ## 4. Editing content
 
 - Phone/address/hours: `src/site.json` (used everywhere).

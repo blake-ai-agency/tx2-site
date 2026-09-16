@@ -232,3 +232,56 @@
   if (q && sel.querySelector('option[value="' + q.replace(/[^a-z]/g, "") + '"]')) { sel.value = q.replace(/[^a-z]/g, ""); sel.dispatchEvent(new Event("change")); }
   if (new URLSearchParams(location.search).get("error")) { var s = document.querySelector("#contact-form .form__status"); if (s) { s.dataset.state = "error"; s.textContent = "Something went wrong sending that. Please call or text (636) 584-9662."; } }
 })();
+
+/* ---------- Google reviews: live strip fed by /api/reviews (edge-cached) ---------- */
+(function () {
+  var wrap = document.querySelector("[data-reviews]"); if (!wrap) return;
+  var track = wrap.querySelector("[data-reviews-track]");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var STAR = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.8 1.6 7L12 17.5 5.8 21l1.6-7L2 9.3l7.1-.7z"/></svg>';
+  var stars = function (n) { var s = ""; for (var i = 0; i < 5; i++) s += i < n ? STAR : STAR.replace('fill="currentColor"', 'fill="currentColor" opacity=".25"'); return s; };
+  var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+  var card = function (r) {
+    var a = el("article", "rcard");
+    var head = el("div", "rcard__head");
+    head.appendChild(el("span", "rcard__avatar", (r.author || "G").trim().charAt(0).toUpperCase()));
+    var who = el("div");
+    var name = el("b");
+    if (r.authorUrl && /^https:\/\/(www\.)?google\.com\//.test(r.authorUrl)) { var link = el("a", null, r.author); link.href = r.authorUrl; link.rel = "noopener nofollow"; link.target = "_blank"; name.appendChild(link); } else { name.textContent = r.author; }
+    who.appendChild(name); who.appendChild(el("span", "muted", r.when || "Google review"));
+    head.appendChild(who);
+    var st = el("span", "stars"); st.setAttribute("aria-label", r.rating + " stars"); st.innerHTML = stars(r.rating); head.appendChild(st);
+    a.appendChild(head);
+    var p = el("p", "rcard__text", r.text); a.appendChild(p);
+    if (r.text.length > 260) { var more = el("button", "rcard__more", "Read more"); more.type = "button"; more.addEventListener("click", function () { var open = p.classList.toggle("is-open"); more.textContent = open ? "Show less" : "Read more"; }); a.appendChild(more); }
+    return a;
+  };
+
+  var mode = function (count) {
+    // Enough cards to loop seamlessly? scroll. Otherwise a static, swipeable row.
+    var scroll = count >= 4 && !reduce;
+    wrap.classList.toggle("reviews--scroll", scroll);
+    wrap.classList.toggle("reviews--static", !scroll);
+    if (scroll) {
+      Array.prototype.slice.call(track.children).forEach(function (c) { var d = c.cloneNode(true); d.setAttribute("aria-hidden", "true"); track.appendChild(d); });
+      wrap.style.setProperty("--reviews-dur", Math.max(30, count * 9) + "s");
+    }
+  };
+
+  fetch("/api/reviews", { headers: { accept: "application/json" } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !d.ok || !d.reviews || !d.reviews.length) { mode(track.children.length); return; }
+      track.textContent = "";
+      d.reviews.forEach(function (r) { track.appendChild(card(r)); });
+      var rating = document.querySelector("[data-gbadge-rating]"), count = document.querySelector("[data-gbadge-count]"), gs = document.querySelector("[data-gbadge-stars]");
+      if (rating && d.rating) rating.textContent = Number(d.rating).toFixed(1);
+      if (count && d.count) count.textContent = d.count + " Google review" + (d.count === 1 ? "" : "s");
+      if (gs && d.rating) gs.innerHTML = stars(Math.round(d.rating));
+      document.querySelectorAll("[data-write-review]").forEach(function (a) { if (d.writeReviewUrl) a.href = d.writeReviewUrl; });
+      document.querySelectorAll("[data-maps-link], [data-gbadge]").forEach(function (a) { if (d.mapsUrl) a.href = d.mapsUrl; });
+      mode(d.reviews.length);
+    })
+    .catch(function () { mode(track.children.length); });
+})();

@@ -10,16 +10,42 @@
   "state": "MO",
   "zip": "63084",
   "county": "Franklin County",
-  "hours": "Mon–Sat, 7am–6pm · Text anytime",
+  "hours": "Mon\u2013Sat, 7am\u20136pm \u00b7 Text anytime",
   "facebook": "https://www.facebook.com/tx2team/",
   "turnstileSiteKey": "1x00000000000000000000AA",
   "tagline": "Dumpster rental, junk removal & property maintenance for Franklin County and the St. Louis metro.",
   "navItems": [
-    { "key": "dumpsters", "label": "Dumpster Rental", "href": "/dumpster-rental" },
-    { "key": "junk", "label": "Junk Removal", "href": "/junk-removal" },
-    { "key": "property", "label": "Property Maintenance", "href": "/property-maintenance" },
-    { "key": "areas", "label": "Service Areas", "href": "/service-areas" },
-    { "key": "about", "label": "About", "href": "/about" },
-    { "key": "faq", "label": "FAQ", "href": "/faq" }
-  ]
+    {
+      "key": "dumpsters",
+      "label": "Dumpster Rental",
+      "href": "/dumpster-rental"
+    },
+    {
+      "key": "junk",
+      "label": "Junk Removal",
+      "href": "/junk-removal"
+    },
+    {
+      "key": "property",
+      "label": "Property Maintenance",
+      "href": "/property-maintenance"
+    },
+    {
+      "key": "areas",
+      "label": "Service Areas",
+      "href": "/service-areas"
+    },
+    {
+      "key": "about",
+      "label": "About",
+      "href": "/about"
+    },
+    {
+      "key": "faq",
+      "label": "FAQ",
+      "href": "/faq"
+    }
+  ],
+  "googleMapsUrl": "https://www.google.com/maps/place/TX2+Services/@38.46263,-91.0095221,17z/data=!4m6!3m5!1s0x87d9454b5633d777:0x961744f486c9f416!8m2!3d38.46263!4d-91.0095221!16s%2Fg%2F11ldg2f_wx",
+  "googleReviewUrl": "https://www.google.com/maps/place/TX2+Services/@38.46263,-91.0095221,17z/data=!4m6!3m5!1s0x87d9454b5633d777:0x961744f486c9f416!8m2!3d38.46263!4d-91.0095221!16s%2Fg%2F11ldg2f_wx"
 }
