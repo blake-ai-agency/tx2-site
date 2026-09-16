@@ -1,0 +1,13 @@
+{
+  "name": "tx2-services-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TX2 Services — dumpster rental, junk removal & property maintenance in Union, MO. Static site for Cloudflare Pages.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && npx --yes wrangler pages dev dist",
+    "deploy": "node build.mjs && npx --yes wrangler pages deploy dist --project-name tx2-services"
+  },
+  "engines": { "node": ">=18" }
+}

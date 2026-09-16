@@ -1,0 +1,10 @@
+# Legacy / convenience paths -> canonical clean URLs
+/index.html            /                     301
+/dumpsters             /dumpster-rental      301
+/dumpster              /dumpster-rental      301
+/junk                  /junk-removal         301
+/services              /#services            301
+/areas                 /service-areas        301
+/quote                 /contact              301
+/book                  /contact              301
+/book-now              /contact              301

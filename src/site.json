@@ -1,0 +1,25 @@
+{
+  "name": "TX2 Services",
+  "legalName": "TX2 Services LLC",
+  "url": "https://www.tx2services.com",
+  "phone": "(636) 584-9662",
+  "phoneTel": "+16365849662",
+  "phoneSms": "sms:+16365849662",
+  "street": "2 Kee Drive",
+  "city": "Union",
+  "state": "MO",
+  "zip": "63084",
+  "county": "Franklin County",
+  "hours": "Mon–Sat, 7am–6pm · Text anytime",
+  "facebook": "https://www.facebook.com/tx2team/",
+  "turnstileSiteKey": "1x00000000000000000000AA",
+  "tagline": "Dumpster rental, junk removal & property maintenance for Franklin County and the St. Louis metro.",
+  "navItems": [
+    { "key": "dumpsters", "label": "Dumpster Rental", "href": "/dumpster-rental" },
+    { "key": "junk", "label": "Junk Removal", "href": "/junk-removal" },
+    { "key": "property", "label": "Property Maintenance", "href": "/property-maintenance" },
+    { "key": "areas", "label": "Service Areas", "href": "/service-areas" },
+    { "key": "about", "label": "About", "href": "/about" },
+    { "key": "faq", "label": "FAQ", "href": "/faq" }
+  ]
+}
