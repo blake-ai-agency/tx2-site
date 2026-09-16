@@ -38,11 +38,26 @@ async function resolvePlaceId(key) {
     headers: { "content-type": "application/json", "X-Goog-Api-Key": key, "X-Goog-FieldMask": "places.id,places.displayName" },
     body: JSON.stringify({ textQuery: SEARCH_QUERY, maxResultCount: 1 }),
   });
-  if (!r.ok) throw new Error(`searchText ${r.status}`);
-  const d = await r.json();
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`Place lookup failed (${r.status}): ${googleReason(d)}`);
   const id = d.places && d.places[0] && d.places[0].id;
-  if (!id) throw new Error("place not found");
+  if (!id) throw new Error("Place lookup returned no match for the business address");
   return id;
+}
+
+// Google's error envelope → one safe, human-readable line (never includes the key)
+function googleReason(d) {
+  const e = d && d.error;
+  if (!e) return "unknown error";
+  const status = e.status || e.code || "";
+  const msg = String(e.message || "").replace(/key=[^&\s]+/g, "key=…");
+  let hint = "";
+  if (/not (been )?(used|enabled)|SERVICE_DISABLED/i.test(msg)) hint = " → enable \"Places API (New)\" in Google Cloud for this project";
+  else if (/billing/i.test(msg)) hint = " → enable billing on the Google Cloud project";
+  else if (/referer|referrer/i.test(msg)) hint = " → the key has HTTP-referrer restrictions; server calls have no referrer, use API restrictions only";
+  else if (/API key not valid|INVALID_ARGUMENT.*key/i.test(msg)) hint = " → check the key was pasted correctly";
+  else if (/PERMISSION_DENIED/i.test(status)) hint = " → the key is restricted to a different API; allow \"Places API (New)\"";
+  return `${status} ${msg}${hint}`.trim();
 }
 
 function shape(place, minRating) {
@@ -94,17 +109,18 @@ export async function onRequestGet(context) {
     const r = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=en`, {
       headers: { "X-Goog-Api-Key": key, "X-Goog-FieldMask": FIELDS },
     });
+    const place = await r.json().catch(() => ({}));
     if (!r.ok) {
-      console.error("places_details_error", r.status, await r.text().catch(() => ""));
-      return json(502, { ok: false, error: "google_unavailable" });
+      const detail = `Place details failed (${r.status}): ${googleReason(place)}`;
+      console.error("places_details_error", detail);
+      return json(502, { ok: false, error: "google_unavailable", detail });
     }
-    const place = await r.json();
     const res = json(200, shape(place, minRating), ttl);
     context.waitUntil(cache.put(cacheKey, res.clone()));
     return res;
   } catch (e) {
     console.error("reviews_exception", String(e));
-    return json(502, { ok: false, error: "google_unavailable" });
+    return json(502, { ok: false, error: "google_unavailable", detail: String(e && e.message || e).slice(0, 300) });
   }
 }
 
