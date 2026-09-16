@@ -3,11 +3,17 @@
 // Each page starts with a JSON front-matter block inside <!--{ ... }-->.
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, cpSync, rmSync, existsSync, statSync } from "node:fs";
 import { join, basename } from "node:path";
+import { createHash } from "node:crypto";
 
 const ROOT = new URL(".", import.meta.url).pathname;
 const SRC = join(ROOT, "src");
 const DIST = join(ROOT, "dist");
 const site = JSON.parse(readFileSync(join(SRC, "site.json"), "utf8"));
+// Content hash of CSS+JS → ?v= on asset URLs, so browsers never serve a stale stylesheet after a deploy
+site.assetVer = createHash("sha256")
+  .update(readFileSync(join(ROOT, "public/css/site.css")))
+  .update(readFileSync(join(ROOT, "public/js/site.js")))
+  .digest("hex").slice(0, 10);
 
 const partials = Object.fromEntries(
   readdirSync(join(SRC, "partials")).map((f) => [basename(f, ".html"), readFileSync(join(SRC, "partials", f), "utf8")])
