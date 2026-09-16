@@ -249,14 +249,24 @@
     var who = el("div");
     var name = el("b");
     if (r.authorUrl && /^https:\/\/(www\.)?google\.com\//.test(r.authorUrl)) { var link = el("a", null, r.author); link.href = r.authorUrl; link.rel = "noopener nofollow"; link.target = "_blank"; name.appendChild(link); } else { name.textContent = r.author; }
-    who.appendChild(name); who.appendChild(el("span", "muted", r.when || "Google review"));
+    who.appendChild(name);
+    var meta = el("span", "rcard__meta");
+    var st = el("span", "stars"); st.setAttribute("aria-label", r.rating + " stars"); st.innerHTML = stars(r.rating); meta.appendChild(st);
+    meta.appendChild(el("span", "muted", r.when || "Google review"));
+    who.appendChild(meta);
     head.appendChild(who);
-    var st = el("span", "stars"); st.setAttribute("aria-label", r.rating + " stars"); st.innerHTML = stars(r.rating); head.appendChild(st);
     a.appendChild(head);
     var p = el("p", "rcard__text", r.text); a.appendChild(p);
-    if (r.text.length > 260) { var more = el("button", "rcard__more", "Read more"); more.type = "button"; more.addEventListener("click", function () { var open = p.classList.toggle("is-open"); more.textContent = open ? "Show less" : "Read more"; }); a.appendChild(more); }
+    var more = el("button", "rcard__more", "Read more"); more.type = "button"; more.hidden = true;
+    more.addEventListener("click", function () { var open = p.classList.toggle("is-open"); more.textContent = open ? "Show less" : "Read more"; });
+    a.appendChild(more);
     return a;
   };
+  // Show "Read more" only when the text is actually clamped at this card width
+  var checkClamps = function () {
+    track.querySelectorAll(".rcard").forEach(function (c) { var p = c.querySelector(".rcard__text"), m = c.querySelector(".rcard__more"); if (p && m && !p.classList.contains("is-open")) m.hidden = p.scrollHeight <= p.clientHeight + 2; });
+  };
+  window.addEventListener("resize", checkClamps);
 
   var mode = function (count) {
     // Enough cards to loop seamlessly? scroll. Otherwise a static, swipeable row.
@@ -282,6 +292,7 @@
       document.querySelectorAll("[data-write-review]").forEach(function (a) { if (d.writeReviewUrl) a.href = d.writeReviewUrl; });
       document.querySelectorAll("[data-maps-link], [data-gbadge]").forEach(function (a) { if (d.mapsUrl) a.href = d.mapsUrl; });
       mode(d.reviews.length);
+      requestAnimationFrame(checkClamps);
     })
     .catch(function () { mode(track.children.length); });
 })();
