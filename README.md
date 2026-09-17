@@ -48,9 +48,9 @@ Everything else (service area lists, "5 days + 1 ton included", 14-yard specs) c
 |---|---|
 | `TURNSTILE_SECRET_KEY` | dash.cloudflare.com → **Turnstile** → Add widget (domain = your site) → copy **Secret key**. Put the matching **Site key** into `src/site.json → turnstileSiteKey`. |
 | `RESEND_API_KEY` | resend.com → API Keys. Verify your sending domain there first (free tier is plenty). |
-| `CONTACT_TO_EMAIL` | Where leads should land, e.g. `cody@…`. Comma-separate for multiple. |
-| `CONTACT_FROM_EMAIL` | A sender on your verified Resend domain, e.g. `TX2 Website <leads@tx2services.com>`. |
-| `SITE_ORIGIN` *(optional)* | `https://www.tx2services.com` — pins the form to one origin. |
+| `CONTACT_TO_EMAIL` | `tx2service@gmail.com` (leads inbox). Comma-separate to add more recipients. |
+| `CONTACT_FROM_EMAIL` | `TX2 Website <leads@tx2services.com>` — must stay on the Resend-verified domain (tx2services.com). |
+| `SITE_ORIGIN` *(optional)* | Leave UNSET until the root→www redirect rule is active — the apex currently serves pages, and pinning would block form posts from it. |
 | `RATE_LIMIT` *(optional KV binding)* | Pages → Settings → Functions → KV namespace bindings. Enables 5 submissions / 10 min / IP. |
 
 Until these are set, the form returns a friendly "call us" message instead of failing silently.
